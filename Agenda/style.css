@@ -1,0 +1,11 @@
+#card1 {
+    margin-left: 180px;
+    align-self: center;
+    width: 800px;
+    height: 600px;
+}
+
+.titulo {
+    margin-top: 10px;
+    font-family: 'Merriweather', serif;
+}

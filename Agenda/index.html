@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" type="image/png" href="./favicon.png" />
+    <title>Vue Agenda</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Merriweather" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+
+<body>
+    <div id="app">
+        <v-app dark>
+            <v-content>
+                <v-container>
+                    <template>
+            <v-card id="card1">
+              <div class="headline text-xs-center pa-5">
+               
+                <form v-if="bottomNav == 'recent'">
+                    <div class="titulo">
+                        <v-icon size="80px" color="#CEE3F6" ligth >supervised_user_circle</v-icon>
+                        <h1>Novo Contato</h1>
+                        </div>
+                  <v-text-field v-model="name" label="Name"></v-text-field>
+                  <v-text-field v-model="telefone" label="telefone"></v-text-field>
+                  <v-btn @click="submit">Cadastrar</v-btn>
+                  <v-btn @click="clear">Limpar</v-btn>
+                </form>
+                <div  v-if="bottomNav == 'nearby'">
+                <v-data-table
+                :headers="headers"
+                :items="lista"
+                class="elevation-1"
+              >
+                <template slot="items" slot-scope="props">
+                  <td>{{ props.item.nome }}</td>
+                  <td class="text-xs-right">{{ props.item.telefone }}</td>
+                </template>
+                    </v-data-table>
+    </div>
+
+    </div>
+    <v-bottom-nav :active.sync="bottomNav" :value="true" absolute color="transparent">
+        <v-btn color="teal" flat value="recent">
+            <span>Novo</span>
+            <v-icon>check_circle_outline</v-icon>
+        </v-btn>
+        <v-btn color="teal" flat value="nearby">
+            <span>Lista</span>
+            <v-icon>description</v-icon>
+        </v-btn>
+    </v-bottom-nav>
+    </v-card>
+
+    </template>
+    </v-container>
+    </v-content>
+    </v-app>
+    </div>
+    <script>
+        var db = openDatabase('vueAgenda', '1.0', 'lista', 5 * 1024 * 1024);
+        db.transaction(function(sql) {
+            sql.executeSql('CREATE TABLE IF NOT EXISTS vueAgenda (id INTEGER PRIMARY KEY, nome TEXT, telefone TEXT)')
+        });
+        try {
+            db.transaction(function(sql) {
+                sql.executeSql('SELECT * FROM vueAgenda', [], function(tx, result) {
+                    for (var i of result.rows) {
+                        vm.lista.push(i)
+                    }
+                })
+            })
+        } catch (err) {
+            console.log(err)
+        }
+        var vm = new Vue({
+            el: '#app',
+            data: () => ({
+                name: '',
+                telefone: '',
+                bottomNav: 'recent',
+                lista: [],
+                headers: [{
+                    text: 'Nome',
+                    align: 'left',
+                    sortable: false,
+                    value: 'name'
+                }, {
+                    text: 'Telefone',
+                    value: 'telefone'
+                }],
+
+            }),
+            methods: {
+                mostrar: function() {
+
+                },
+                clear: function() {
+                    this.name = '';
+                    this.telefone = '';
+                },
+                submit: function() {
+
+                    if (this.name == '' && this.telefone == '') {
+                        Swal.fire({
+                            position: 'center',
+                            background: '#111',
+                            type: 'error',
+                            title: `Dados inválidos!`,
+                            showConfirmButton: false,
+                            timer: 1500
+                        })
+
+                    } else {
+                        try {
+                            db.transaction(function(sql) {
+                                sql.executeSql(`INSERT INTO vueAgenda (nome, telefone) values (?,?)`, [vm.name, vm.telefone])
+                                console.log(`nome:  ${vm.name}, telefone: ${vm.telefone} `)
+                            });
+                            Swal.fire({
+                                position: 'center',
+                                background: '#111',
+                                type: 'success',
+                                title: `${vm.name}  Salvo com sucesso!`,
+                                showConfirmButton: false,
+                                timer: 1500
+                            })
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+
+
+                }
+            },
+
+        })
+    </script>
+</body>
