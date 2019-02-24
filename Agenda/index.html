@@ -37,11 +37,16 @@
                 </form>
                 <div  v-if="bottomNav == 'nearby'">
                 <v-data-table
+                v-model="selected"
                 :headers="headers"
                 :items="lista"
                 class="elevation-1"
               >
                 <template slot="items" slot-scope="props">
+
+                <th>
+          <v-checkbox v-model="selected" :value="props.item.nome" ></v-checkbox></th>
+
                   <td>{{ props.item.nome }}</td>
                   <td class="text-xs-right">{{ props.item.telefone }}</td>
                 </template>
@@ -58,6 +63,10 @@
             <span>Lista</span>
             <v-icon>description</v-icon>
         </v-btn>
+            <v-btn  color="red" @click="deletar" v-if="bottomNav == 'nearby'">
+            <span>Excluir</span>
+             <v-icon>delete</v-icon>
+            </v-btn>
     </v-bottom-nav>
     </v-card>
 
@@ -85,24 +94,58 @@
         var vm = new Vue({
             el: '#app',
             data: () => ({
+                selected: [],
                 name: '',
                 telefone: '',
                 bottomNav: 'recent',
                 lista: [],
                 headers: [{
-                    text: 'Nome',
+                    text: 'Selecionados',
                     align: 'left',
                     sortable: false,
                     value: 'name'
-                }, {
+                }, 
+                {text: 'Nome', value: 'Nome'},
+                {
                     text: 'Telefone',
                     value: 'telefone'
                 }],
 
             }),
             methods: {
-                mostrar: function() {
+                deletar: function() {
+                    
+            Swal.fire({
+            background: '#111',
+            title: 'Deseja Excluir?',
+            text: "Esta ação é irreversível",
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sim'
+            }).then((result) => { 
+            if (result.value) {
+                try{
+                    vm.selected.forEach((e) => db.transaction((x)=>x.executeSql(`DELETE FROM vueAgenda WHERE nome == "${e}" `)));
+             Swal.fire({
+                            position: 'center',
+                            background: '#111',
+                            type: 'success',
+                            title: `Dados deletados!`,
+                            showConfirmButton: false,
+                            timer: 1500
+                        })
+                } catch(err){
+                    console.error(err);
+                }finally{
+                    window.location.reload();
+                }
+                
+             }
+            })
 
+                    
                 },
                 clear: function() {
                     this.name = '';
@@ -136,10 +179,11 @@
                             })
                         } catch (err) {
                             console.error(err);
+                        } finally{
+                            window.location.reload()
                         }
+                        
                     }
-
-
                 }
             },
 
